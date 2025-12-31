@@ -87,8 +87,8 @@ const SiteFooter = ({ navigateTo }: { navigateTo: (id: SectionId) => void }) => 
             <a href="tel:2179860863" className="font-bold text-sm flex items-center gap-3 text-white hover:text-[#fc466b] transition-colors">
               <Phone size={14} /> 217.986.0863
             </a>
-            <a href="mailto:renee.i@savvyhuman.tech" className="font-bold text-sm flex items-center gap-3 text-white hover:text-[#fc466b] transition-colors break-all">
-              <Mail size={14} /> renee.i@savvyhuman.tech
+            <a href="mailto:savvy.human@outlook.com" className="font-bold text-sm flex items-center gap-3 text-white hover:text-[#fc466b] transition-colors break-all">
+              <Mail size={14} /> savvy.human@outlook.com
             </a>
           </div>
         </div>
@@ -537,8 +537,8 @@ const App: React.FC = () => {
                   className="space-y-8"
                   onSubmit={(e) => {
                     e.preventDefault();
-                    window.location.href = "mailto:renee.i@savvyhuman.tech?subject=Support Request&body=Inquiry from website";
-                    alert('Redirecting to your email client to message renee.i@savvyhuman.tech...');
+                    window.location.href = "mailto:savvy.human@outlook.com?subject=Support Request&body=Inquiry from website";
+                    alert('Redirecting to your email client to message savvy.human@outlook.com...');
                   }}
                 >
                   <div className="grid md:grid-cols-2 gap-8">
@@ -597,9 +597,9 @@ const App: React.FC = () => {
                         <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-[#3f5efb] shadow-sm group-hover:scale-110 transition-all border border-white/10"><Phone size={24} /></div> 
                         Call 217.986.0863
                       </a>
-                      <a href="mailto:renee.i@savvyhuman.tech" className="flex items-center gap-4 text-xl font-black text-white hover:text-[#3f5efb] transition-colors group break-all">
+                      <a href="mailto:savvy.human@outlook.com" className="flex items-center gap-4 text-xl font-black text-white hover:text-[#3f5efb] transition-colors group break-all">
                         <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-[#3f5efb] shadow-sm group-hover:scale-110 transition-all border border-white/10"><Send size={24} /></div> 
-                        renee.i@savvyhuman.tech
+                        savvy.human@outlook.com
                       </a>
                     </div>
                   </div>
