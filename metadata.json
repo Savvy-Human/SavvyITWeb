@@ -1,0 +1,8 @@
+{
+  "name": "Savvy IT - Technology Made Simple",
+  "description": "A high-end service platform for technical support, coaching, and automation, featuring a unique split-slider navigation and instant project estimator.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
