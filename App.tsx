@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import Estimator from './components/Estimator';
 import { 
   Menu, X, Cpu, GraduationCap, Zap, CheckCircle, 
   Mail, Phone, MapPin, ChevronRight, MessageCircle, 
   Send, User, Quote, Star, Clock, Video, Monitor, 
-  ChevronDown, ExternalLink, ArrowRight
+  ChevronDown, ExternalLink, ArrowRight, Laptop, Sparkles
 } from 'lucide-react';
 
 type SectionId = 'home' | 'about' | 'services' | 'coaching' | 'automation' | 'testimonials' | 'faq' | 'contact';
@@ -46,6 +45,32 @@ const FAQItem = ({ question, answer }: { question: string; answer: string }) => 
   );
 };
 
+const AnimatedSection = ({ children, id, className = "" }: { children: React.ReactNode, id: SectionId, className?: string }) => {
+  const sectionRef = useRef<HTMLElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setIsVisible(true);
+      }
+    }, { threshold: 0.1 });
+
+    if (sectionRef.current) observer.observe(sectionRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <section 
+      id={id} 
+      ref={sectionRef} 
+      className={`reveal-section ${isVisible ? 'is-visible' : ''} ${className}`}
+    >
+      {children}
+    </section>
+  );
+};
+
 const SiteFooter = ({ navigateTo }: { navigateTo: (id: SectionId) => void }) => (
   <footer className="w-full bg-savvy-dark/50 pt-24 pb-12 px-8 md:px-24 border-t border-white/5" role="contentinfo">
     <div className="max-w-7xl mx-auto">
@@ -62,8 +87,8 @@ const SiteFooter = ({ navigateTo }: { navigateTo: (id: SectionId) => void }) => 
             <a href="tel:2179860863" className="font-bold text-sm flex items-center gap-3 text-white hover:text-[#fc466b] transition-colors">
               <Phone size={14} /> 217.986.0863
             </a>
-            <a href="mailto:help@savvyhuman.tech" className="font-bold text-sm flex items-center gap-3 text-white hover:text-[#fc466b] transition-colors break-all">
-              <Mail size={14} /> help@savvyhuman.tech
+            <a href="mailto:renee.i@savvyhuman.tech" className="font-bold text-sm flex items-center gap-3 text-white hover:text-[#fc466b] transition-colors break-all">
+              <Mail size={14} /> renee.i@savvyhuman.tech
             </a>
           </div>
         </div>
@@ -115,21 +140,11 @@ const SiteFooter = ({ navigateTo }: { navigateTo: (id: SectionId) => void }) => 
 const App: React.FC = () => {
   const [activeSection, setActiveSection] = useState<SectionId>('home');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
   const [typedText, setTypedText] = useState('');
   const [estimateData, setEstimateData] = useState<any>(null);
 
-  const sectionRefs = {
-    home: useRef<HTMLElement>(null),
-    about: useRef<HTMLElement>(null),
-    services: useRef<HTMLElement>(null),
-    coaching: useRef<HTMLElement>(null),
-    automation: useRef<HTMLElement>(null),
-    testimonials: useRef<HTMLElement>(null),
-    faq: useRef<HTMLElement>(null),
-    contact: useRef<HTMLElement>(null),
-  };
-
-  const phrases = ["Intelligent", "Strategic", "Empowering", "Human-centered", "Savvy IT"];
+  const phrases = ["Strategic", "Efficient", "Intuitive", "Savvy IT"];
   
   useEffect(() => {
     let phraseIdx = 0;
@@ -163,12 +178,22 @@ const App: React.FC = () => {
   }, []);
 
   const navigateTo = (id: SectionId) => {
-    const element = sectionRefs[id].current;
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
+    setIsNavigating(true);
     setIsMenuOpen(false);
-    setActiveSection(id);
+
+    // After fade out starts, scroll and then fade back in
+    setTimeout(() => {
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({ behavior: 'auto' });
+      }
+      setActiveSection(id);
+      
+      // Short delay for the "reveal" to feel fluid
+      setTimeout(() => {
+        setIsNavigating(false);
+      }, 100);
+    }, 500);
   };
 
   const handleBookService = (data: any) => {
@@ -190,6 +215,9 @@ const App: React.FC = () => {
   return (
     <div className={`relative min-h-screen bg-savvy-dark text-white font-sans overflow-x-hidden ${isMenuOpen ? 'menu-open' : ''}`}>
       
+      {/* Global Page Transition Overlay */}
+      <div className={`page-overlay ${isNavigating ? 'is-active' : ''}`} aria-hidden="true" />
+
       {/* Header */}
       <header role="banner" className="fixed top-0 left-0 w-full z-50 p-6 md:px-12 flex justify-between items-center bg-savvy-dark/80 backdrop-blur-md border-b border-white/5">
         <div onClick={() => navigateTo('home')} className="cursor-pointer">
@@ -197,18 +225,30 @@ const App: React.FC = () => {
         </div>
         
         <nav className="hidden md:flex items-center gap-8">
-          {['Home', 'Services', 'Coaching', 'AI & Automation', 'About'].map((link) => (
-            <button 
-              key={link} 
-              onClick={() => navigateTo(link.toLowerCase().includes('about') ? 'about' : link.toLowerCase().includes('automation') ? 'automation' : link.toLowerCase() as SectionId)}
-              className="text-sm font-bold text-gray-400 hover:text-white transition-colors"
-            >
-              {link}
-            </button>
-          ))}
+          {['Home', 'Services', 'Coaching', 'AI & Automation', 'About'].map((link) => {
+            let target: SectionId = 'home';
+            if (link.toLowerCase().includes('about')) target = 'about';
+            else if (link.toLowerCase().includes('automation')) target = 'automation';
+            else if (link.toLowerCase().includes('services')) target = 'services';
+            else if (link.toLowerCase().includes('coaching')) target = 'coaching';
+            
+            return (
+              <button 
+                key={link} 
+                onClick={() => navigateTo(target)}
+                className="text-sm font-bold text-gray-400 hover:text-white transition-colors"
+              >
+                {link}
+              </button>
+            );
+          })}
         </nav>
 
         <div className="flex items-center gap-4">
+          <div className="hidden lg:flex items-center gap-3 bg-white/5 px-4 py-2 rounded-full border border-white/10">
+            <Phone size={16} className="text-[#3f5efb]" />
+            <span className="text-xs font-bold text-gray-400">Talk to an expert: <a href="tel:2179860863" className="text-white hover:text-[#3f5efb]">217.986.0863</a></span>
+          </div>
           <button 
             onClick={() => navigateTo('contact')}
             className="px-6 py-2.5 bg-[#3f5efb] hover:bg-[#3249c1] text-white font-bold rounded-lg text-sm transition-all shadow-md focus:ring-4 focus:ring-[#3f5efb]/20 outline-none"
@@ -253,16 +293,19 @@ const App: React.FC = () => {
       <main id="main-content">
         
         {/* HERO SECTION */}
-        <section id="home" ref={sectionRefs.home} className="justify-center px-8 md:px-24 bg-savvy-dark">
+        <AnimatedSection id="home" className="justify-center px-8 md:px-24 bg-savvy-dark">
           <div className="max-w-7xl mx-auto w-full pt-32">
-            <span className="text-[#3f5efb] uppercase tracking-[0.4em] font-bold text-xs mb-6 block">Get Help</span>
-            <h1 className="text-6xl md:text-8xl font-black text-white leading-[0.9] tracking-tighter mb-10">
-              Let's solve your <br />
+            <div className="inline-flex items-center gap-2 bg-[#3f5efb]/10 px-4 py-2 rounded-full border border-[#3f5efb]/20 mb-8">
+              <Sparkles size={14} className="text-[#3f5efb]" />
+              <span className="text-[10px] uppercase tracking-[0.3em] font-black text-[#3f5efb]">Tech help that actually helps</span>
+            </div>
+            <h1 id="hero-heading" className="text-6xl md:text-8xl font-black text-white leading-[0.9] tracking-tighter mb-10">
+              Hello! We are <br />
               <span className="text-[#3f5efb]">{typedText}</span>
               <span className="inline-block w-1.5 h-12 md:h-20 bg-[#3f5efb] ml-1 animate-pulse"></span>
             </h1>
             <p className="text-xl md:text-2xl text-gray-400 max-w-2xl leading-relaxed mb-12 font-medium">
-              Book a session, ask a question, or just tell us what's going on. We're real humans who respond quickly and actually want to help.
+              We fix your tech, optimize your workflow, and teach you to actually understand it. No jargon. No judgment. Just solutions.
             </p>
             <div className="flex flex-col sm:flex-row gap-6">
               <button onClick={() => navigateTo('contact')} className="px-10 py-5 bg-[#3f5efb] hover:bg-[#3249c1] text-white font-bold rounded-2xl text-lg shadow-lg shadow-[#3f5efb]/20 transition-all">
@@ -273,44 +316,139 @@ const App: React.FC = () => {
               </button>
             </div>
           </div>
-        </section>
+        </AnimatedSection>
 
-        {/* ABOUT SECTION */}
-        <section id="about" ref={sectionRefs.about} className="bg-white/5 py-32 px-8 md:px-24 border-y border-white/5">
-          <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-20 items-center">
-            <div className="space-y-8">
-              <h2 className="text-5xl md:text-6xl font-black text-white tracking-tight">Tech support that <span className="text-[#fc466b]">empowers.</span></h2>
-              <p className="text-xl text-gray-400 leading-relaxed font-medium">
-                We don't just fix problems; we teach you how to master your digital world. Strategic IT consulting for humans, not machines.
-              </p>
-              <div className="grid grid-cols-2 gap-8 pt-8">
-                <div>
-                  <h4 className="font-black text-white text-2xl mb-2">99%</h4>
-                  <p className="text-sm font-bold text-gray-500 uppercase tracking-widest">Satisfaction</p>
-                </div>
-                <div>
-                  <h4 className="font-black text-white text-2xl mb-2">2hr</h4>
-                  <p className="text-sm font-bold text-gray-500 uppercase tracking-widest">Avg Response</p>
-                </div>
-              </div>
+        {/* THREE WAYS TO GET SAVVY */}
+        <AnimatedSection id="about" className="bg-white/5 py-32 px-8 md:px-24 border-y border-white/5">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-24">
+              <span className="text-[#3f5efb] uppercase tracking-[0.4em] font-bold text-xs mb-4 block">What We Do</span>
+              <h2 className="text-5xl md:text-7xl font-black text-white tracking-tight">Three ways to get savvy</h2>
             </div>
-            <div className="bg-white/5 p-12 rounded-[3rem] shadow-xl border border-white/10">
-              <ul className="space-y-8">
-                {['Performance Optimization', 'Strategic IT Planning', 'Personal Coaching', 'AI & Workflow Automation'].map((it) => (
-                  <li key={it} className="flex items-center gap-6 group cursor-default">
-                    <div className="w-12 h-12 rounded-2xl bg-[#3f5efb]/10 text-[#3f5efb] flex items-center justify-center group-hover:bg-[#3f5efb] group-hover:text-white transition-all">
-                      <CheckCircle size={24} />
-                    </div>
-                    <span className="text-xl font-bold text-white">{it}</span>
-                  </li>
-                ))}
-              </ul>
+            
+            <div className="grid md:grid-cols-3 gap-8">
+              {[
+                { 
+                  icon: Laptop, 
+                  title: "Technical Services", 
+                  desc: "Diagnostics, optimization, cleanup, troubleshooting. We make your devices run like they should have from day one.",
+                  items: ["Computer Checkups", "Performance Optimization", "Software Management", "Data Organization"]
+                },
+                { 
+                  icon: GraduationCap, 
+                  title: "Coaching & Training", 
+                  desc: "Learn to use your own tech with confidence. Personal sessions, family programs, business training.",
+                  items: ["1:1 Coaching", "Device Training", "AI Literacy", "Digital Skills"]
+                },
+                { 
+                  icon: Zap, 
+                  title: "AI & Automation", 
+                  desc: "Set up AI tools, build automated workflows, and finally make technology work for you instead of against you.",
+                  items: ["AI Tool Setup", "Custom Workflows", "Process Automation", "Script Development"]
+                }
+              ].map((card, i) => (
+                <div key={i} className="bg-white/5 border border-white/10 p-10 rounded-[2.5rem] hover:border-[#3f5efb]/50 transition-all group">
+                  <div className="w-14 h-14 bg-[#3f5efb]/10 rounded-2xl flex items-center justify-center text-[#3f5efb] mb-8 group-hover:scale-110 transition-transform">
+                    <card.icon size={28} />
+                  </div>
+                  <h3 className="text-2xl font-black mb-4">{card.title}</h3>
+                  <p className="text-gray-400 text-sm font-medium leading-relaxed mb-8">{card.desc}</p>
+                  <ul className="space-y-3 mb-10">
+                    {card.items.map((item, j) => (
+                      <li key={j} className="flex items-center gap-3 text-xs font-bold text-gray-500">
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#3f5efb]/30"></div>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                  <button className="text-xs font-black uppercase tracking-widest flex items-center gap-2 text-white group-hover:text-[#3f5efb] transition-colors">
+                    Learn More <ArrowRight size={14} />
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
-        </section>
+        </AnimatedSection>
+
+        {/* PHILOSOPHY SECTION */}
+        <AnimatedSection id="automation" className="py-32 px-8 md:px-24 bg-savvy-dark overflow-hidden">
+          <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-20 items-center">
+            <div className="space-y-10">
+              <span className="text-[#fc466b] uppercase tracking-[0.4em] font-bold text-xs block">Our Philosophy</span>
+              <h2 className="text-6xl md:text-8xl font-black text-white tracking-tighter leading-[0.9]">
+                We don't just fix it. <br />
+                <span className="text-[#fc466b]">We teach it.</span>
+              </h2>
+              <p className="text-xl text-gray-400 leading-relaxed font-medium max-w-xl">
+                Most tech support leaves you right where you started — waiting for the next thing to break. We believe you should understand your technology, not fear it. That's why coaching is core to everything we do.
+              </p>
+              <div className="space-y-6">
+                {[
+                  "You shouldn't need a PhD to use your own laptop",
+                  "AI tools are only useful if you actually know how to use them",
+                  "The best tech support makes itself unnecessary",
+                  "Understanding beats dependency every time"
+                ].map((text, i) => (
+                  <div key={i} className="flex items-center gap-4 text-base font-bold">
+                    <div className="w-6 h-6 rounded-full bg-[#fc466b]/20 flex items-center justify-center text-[#fc466b]">
+                      <CheckCircle size={14} />
+                    </div>
+                    {text}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="relative">
+              <div className="bg-[#3f5efb]/10 border border-[#3f5efb]/20 p-12 rounded-[3.5rem] relative z-10">
+                <Quote className="text-[#3f5efb] opacity-20 absolute -top-10 -left-10" size={120} />
+                <p className="text-2xl md:text-3xl font-black text-white leading-tight mb-8">
+                  "After one session, I actually understood what all those icons meant. Now I fix half the problems myself."
+                </p>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-gray-700 rounded-full"></div>
+                  <div>
+                    <p className="font-black text-white">Sarah M.</p>
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">Small Business Owner</p>
+                  </div>
+                </div>
+              </div>
+              <div className="absolute -bottom-10 -right-10 w-full h-full bg-[#3f5efb]/5 rounded-[3.5rem] -z-10 transform rotate-3"></div>
+            </div>
+          </div>
+        </AnimatedSection>
+
+        {/* TESTIMONIALS SECTION */}
+        <AnimatedSection id="testimonials" className="py-32 px-8 md:px-24 bg-white/5 border-y border-white/5">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-24">
+              <span className="text-[#3f5efb] uppercase tracking-[0.4em] font-bold text-xs mb-4 block">Testimonials</span>
+              <h2 className="text-5xl md:text-7xl font-black text-white tracking-tight">People seem to like us</h2>
+              <p className="text-gray-400 font-medium mt-4">Don't take our word for it. Here's what our clients have to say.</p>
+            </div>
+            
+            <div className="grid md:grid-cols-3 gap-8">
+              {[
+                { name: "Michael R.", role: "Retired Teacher", text: "I went from 'what's a cloud?' to setting up my own automated backup system. The patience and clarity were incredible." },
+                { name: "Jennifer L.", role: "Freelance Designer", text: "They didn't just clean up my laptop — they showed me why it got slow in the first place. Haven't had an issue since." },
+                { name: "David K.", role: "Real Estate Agent", text: "The AI training session paid for itself in the first week. I'm saving 3 hours a day on email alone." }
+              ].map((t, i) => (
+                <div key={i} className="bg-white/5 border border-white/10 p-10 rounded-[2rem] space-y-8 flex flex-col justify-between">
+                  <div className="flex gap-1 text-[#fc466b]">
+                    {[...Array(5)].map((_, j) => <Star key={j} size={16} fill="currentColor" />)}
+                  </div>
+                  <p className="text-lg font-bold text-gray-300 italic leading-relaxed">"{t.text}"</p>
+                  <div className="pt-6 border-t border-white/5">
+                    <p className="font-black text-white">{t.name}</p>
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">{t.role}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </AnimatedSection>
 
         {/* ESTIMATOR SECTION */}
-        <section id="services" ref={sectionRefs.services} className="py-32 px-8 md:px-24">
+        <AnimatedSection id="services" className="py-32 px-8 md:px-24">
            <div className="max-w-7xl mx-auto">
              <div className="text-center mb-20">
                <h2 className="text-5xl md:text-7xl font-black mb-8 tracking-tighter">Instant Project Estimates</h2>
@@ -318,10 +456,33 @@ const App: React.FC = () => {
              </div>
              <Estimator onBook={handleBookService} />
            </div>
-        </section>
+        </AnimatedSection>
+
+        {/* FINAL CTA SECTION */}
+        <AnimatedSection id="coaching" className="py-32 px-8 md:px-24 bg-savvy-dark text-center overflow-hidden">
+          <div className="max-w-4xl mx-auto relative">
+            <span className="text-[#3f5efb] uppercase tracking-[0.4em] font-bold text-xs mb-8 block">Ready to get started?</span>
+            <h2 className="text-6xl md:text-8xl font-black text-white tracking-tighter leading-[0.9] mb-12">
+              Let's make your tech <br />
+              <span className="text-[#3f5efb]">actually work for you.</span>
+            </h2>
+            <p className="text-xl text-gray-400 font-medium mb-12 max-w-2xl mx-auto">
+              Whether you need a quick fix or a full training program, we're here to help. No sales pitch. Just solutions.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-6 justify-center">
+              <button onClick={() => navigateTo('contact')} className="px-12 py-5 bg-[#3f5efb] hover:bg-[#3249c1] text-white font-black rounded-2xl text-lg shadow-xl shadow-[#3f5efb]/30 transition-all flex items-center justify-center gap-3">
+                <Clock size={20} /> Schedule a Session
+              </button>
+              <button onClick={() => navigateTo('contact')} className="px-12 py-5 border-2 border-white/10 hover:border-[#3f5efb] text-white font-black rounded-2xl text-lg transition-all flex items-center justify-center gap-3">
+                <MessageCircle size={20} /> Ask a Question
+              </button>
+            </div>
+            <p className="mt-8 text-xs font-bold text-gray-600 uppercase tracking-widest">Response time: Usually within a few hours. We're real humans.</p>
+          </div>
+        </AnimatedSection>
 
         {/* FAQ SECTION */}
-        <section id="faq" ref={sectionRefs.faq} className="bg-savvy-dark py-32 px-8 md:px-24">
+        <AnimatedSection id="faq" className="bg-savvy-dark py-32 px-8 md:px-24">
           <div className="max-w-4xl mx-auto w-full">
             <div className="text-center mb-16">
               <span className="text-[#3f5efb] uppercase tracking-[0.4em] font-bold text-xs mb-4 block">FAQ</span>
@@ -354,16 +515,14 @@ const App: React.FC = () => {
               />
             </div>
           </div>
-        </section>
+        </AnimatedSection>
 
         {/* CONTACT SECTION */}
-        <section id="contact" ref={sectionRefs.contact} className="bg-savvy-dark py-32 px-8 md:px-24 border-t border-white/5" aria-labelledby="contact-heading">
+        <AnimatedSection id="contact" className="bg-savvy-dark py-32 px-8 md:px-24 border-t border-white/5" aria-labelledby="contact-heading">
           <div className="max-w-7xl mx-auto w-full">
             <div className="mb-20">
-              <span className="text-[#3f5efb] uppercase tracking-[0.4em] font-bold text-xs mb-4 block">Get Help</span>
-              <h2 id="contact-heading" className="text-6xl md:text-8xl font-black text-white tracking-tighter leading-none mb-8">
-                Let's solve your <br />
-                <span className="text-[#3f5efb]">tech problem.</span>
+              <h2 id="contact-heading" className="text-7xl md:text-9xl font-black text-[#3f5efb] tracking-tighter leading-none mb-8 opacity-90">
+                tech problem.
               </h2>
               <p className="text-xl md:text-2xl text-gray-400 max-w-3xl leading-relaxed font-medium">
                 Book a session, ask a question, or just tell us what's going on. We're real humans who respond quickly and actually want to help.
@@ -373,7 +532,7 @@ const App: React.FC = () => {
             <div className="grid lg:grid-cols-12 gap-16">
               {/* Form Side */}
               <div className="lg:col-span-7">
-                <h3 className="text-xl font-black mb-10 uppercase tracking-widest text-white/50">Send us a message</h3>
+                <h3 className="text-2xl font-black mb-10 uppercase tracking-[0.2em] text-white">SEND US A MESSAGE</h3>
                 <form 
                   className="space-y-8"
                   onSubmit={(e) => {
@@ -384,21 +543,21 @@ const App: React.FC = () => {
                 >
                   <div className="grid md:grid-cols-2 gap-8">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em]">Your Name</label>
+                      <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em]">YOUR NAME</label>
                       <input type="text" placeholder="Jane Smith" className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-4 focus:border-[#3f5efb] outline-none transition-all font-bold text-white placeholder:text-white/20" required />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em]">Email</label>
+                      <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em]">EMAIL</label>
                       <input type="email" placeholder="jane@example.com" className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-4 focus:border-[#3f5efb] outline-none transition-all font-bold text-white placeholder:text-white/20" required />
                     </div>
                   </div>
                   <div className="grid md:grid-cols-2 gap-8">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em]">Phone (optional)</label>
+                      <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em]">PHONE (OPTIONAL)</label>
                       <input type="text" placeholder="(555) 123-4567" className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-4 focus:border-[#3f5efb] outline-none transition-all font-bold text-white placeholder:text-white/20" />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em]">What do you need?</label>
+                      <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em]">WHAT DO YOU NEED?</label>
                       <div className="relative">
                         <select className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-4 focus:border-[#3f5efb] outline-none transition-all font-bold text-white appearance-none cursor-pointer">
                           <option className="bg-savvy-dark text-white">Select a service</option>
@@ -406,13 +565,14 @@ const App: React.FC = () => {
                           <option className="bg-savvy-dark text-white">Tune-Up Session</option>
                           <option className="bg-savvy-dark text-white">Personal Coaching</option>
                           <option className="bg-savvy-dark text-white">Automation Setup</option>
+                          <option className="bg-savvy-dark text-white">Other</option>
                         </select>
                         <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none" size={18} />
                       </div>
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em]">Tell us what's going on</label>
+                    <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em]">TELL US WHAT'S GOING ON</label>
                     <textarea 
                       className="w-full bg-white/5 border border-white/10 rounded-xl px-6 py-4 h-48 focus:border-[#3f5efb] outline-none transition-all font-bold text-white resize-none placeholder:text-white/20"
                       placeholder="Describe your issue, question, or what you'd like to learn..."
@@ -437,9 +597,9 @@ const App: React.FC = () => {
                         <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-[#3f5efb] shadow-sm group-hover:scale-110 transition-all border border-white/10"><Phone size={24} /></div> 
                         Call 217.986.0863
                       </a>
-                      <a href="mailto:help@savvyhuman.tech" className="flex items-center gap-4 text-xl font-black text-white hover:text-[#3f5efb] transition-colors group break-all">
+                      <a href="mailto:renee.i@savvyhuman.tech" className="flex items-center gap-4 text-xl font-black text-white hover:text-[#3f5efb] transition-colors group break-all">
                         <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center text-[#3f5efb] shadow-sm group-hover:scale-110 transition-all border border-white/10"><Send size={24} /></div> 
-                        help@savvyhuman.tech
+                        renee.i@savvyhuman.tech
                       </a>
                     </div>
                   </div>
@@ -484,7 +644,7 @@ const App: React.FC = () => {
               </div>
             </div>
           </div>
-        </section>
+        </AnimatedSection>
 
         {/* SITE INDEX FOOTER */}
         <SiteFooter navigateTo={navigateTo} />
