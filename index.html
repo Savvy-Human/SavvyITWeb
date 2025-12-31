@@ -40,22 +40,7 @@
         scrollbar-width: none;
       }
 
-      /* Scroll Snapping Container */
-      .snap-container {
-        height: 100vh;
-        scroll-snap-type: y mandatory;
-        overflow-y: scroll;
-        scroll-behavior: smooth;
-      }
-      .snap-section {
-        scroll-snap-align: start;
-        scroll-snap-stop: always;
-        height: 100vh;
-        width: 100%;
-        flex-shrink: 0;
-      }
-
-      /* Staggered Menu Entrance */
+      /* Transitions */
       .menu-item {
         opacity: 0;
         transform: translateY(40px);
@@ -83,9 +68,18 @@
           transition-duration: 0s !important;
           transition-delay: 0s !important;
         }
-        .snap-container {
-          scroll-behavior: auto;
-        }
+      }
+      
+      section {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Site Index Footer visibility */
+      footer {
+        opacity: 1 !important;
+        visibility: visible !important;
       }
     </style>
   <script type="importmap">
